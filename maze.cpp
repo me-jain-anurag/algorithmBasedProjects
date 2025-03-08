@@ -17,28 +17,45 @@ private:
 
     void carvePath(int row, int column, int dx, int dy)
     {
-        mGrid[row + dx][column + dy] = '.';
+        mGrid[row - dx][column - dy] = '.';
     }
+
+    void shuffleDirections(vector<pair<int, int>>& directions)
+    {
+        random_device rd;
+        mt19937 g(rd());
+        shuffle(directions.begin(), directions.end(), g);
+    }
+
 
     void generateMaze(int row, int column)
     {
+        stack<pair<int, int>> st;
         mVisited[row][column] = true;
         mGrid[row][column] = '.';
+        st.push({row, column});
 
-        vector<pair<int, int>> shuffledDirections = mDirections;
-        random_device rd;
-        mt19937 g(rd());
-        shuffle(shuffledDirections.begin(), shuffledDirections.end(), g);
-
-        for (const auto& [dx, dy] : shuffledDirections)
+        while(!st.empty())
         {
-            int newRow = row + dx * 2;
-            int newCol = column + dy * 2;
+            vector<pair<int, int>> shuffledDirections = mDirections;
+            shuffleDirections(shuffledDirections);
+            auto [currentRow, currentColumn] = st.top();
+            st.pop();
 
-            if (isInsideMaze(newRow, newCol) && !mVisited[newRow][newCol])
+            for (const auto& [dx, dy] : shuffledDirections)
             {
-                carvePath(row, column, dx, dy);
-                generateMaze(newRow, newCol);
+                int newRow = currentRow + dx * 2;
+                int newColumn = currentColumn + dy * 2;
+
+                if (isInsideMaze(newRow, newColumn) && !mVisited[newRow][newColumn])
+                {
+                    carvePath(newRow, newColumn, dx, dy);
+                    mGrid[newRow][newColumn] = '.';
+                    mVisited[newRow][newColumn] = true;
+                    st.push({currentRow, currentColumn});
+                    st.push({newRow, newColumn});
+                    break;
+                }
             }
         }
     }
